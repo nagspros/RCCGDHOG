@@ -1,0 +1,7 @@
+{
+  "name": "RCCG Dominion Hope of Glory",
+  "description": "Official website for The Redeemed Christian Church of God - Dominion Hope of Glory (DHOG), Newark, New Jersey.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
