@@ -86,6 +86,9 @@ def public_site(request: Request):
     announcements = [row for row in data["announcements"]
                      if row.get("isActive") and row.get("publishedDate", "") <= today
                      and (not row.get("expiryDate") or row["expiryDate"] >= today)]
+    for collection in ("sermons", "archiveEvents"):
+        for row in data[collection]:
+            row.pop("sourceUrl", None)
     response = JSONResponse({"services": services, "sermons": data["sermons"], "gallery": data["gallery"],
                              **{key: data.get(key) for key in sorted(IMPORTED_CATALOGS)},
                              "churchContactConfig": data["churchContactConfig"], "announcements": announcements})
@@ -431,7 +434,7 @@ if (ROOT / "dist/index.html").is_file():
     @app.get("/{section}", include_in_schema=False)
     def website_route(section: str, path: str = ""):
         if section not in {
-            "about", "ministries", "programmes", "programs", "sermons", "all-sermons",
+            "about", "ministries", "programmes", "programs", "sermons",
             "events", "visit", "prayer", "ask-pastor", "give", "contact", "connect", "watch", "gallery", "admin",
         }:
             raise HTTPException(404)

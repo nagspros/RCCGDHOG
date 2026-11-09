@@ -41,14 +41,13 @@ function SermonDetail({ sermon }: { sermon: Sermon }) {
         {sermon.series && <p className="text-sm text-stone-700">Series · {sermon.series}</p>}
         <nav className="flex flex-wrap gap-3" aria-label="Sermon links">
           <a className="home-button" href={archiveLink}><ArrowLeft aria-hidden="true" /> Back to sermons</a>
-          {sermon.sourceUrl && <a className="rounded-xl border border-stone-300 px-4 py-2.5 text-sm font-semibold" href={sermon.sourceUrl} target="_blank" rel="noreferrer">Original sermon page</a>}
         </nav>
       </article>
     </div>
   );
 }
 
-export function SermonsPage({ sermonId, initialPage = 1 }: { sermonId?: string; initialPage?: number }) {
+export function SermonsPage({ sermonId }: { sermonId?: string }) {
   const loaded = usePublicData<Partial<PublicSite>>('/public/site', {});
   const sermons = loaded.sermons ?? LEGACY_SERMONS;
   const [search, setSearch] = useState('');
@@ -56,7 +55,7 @@ export function SermonsPage({ sermonId, initialPage = 1 }: { sermonId?: string; 
   const [preacher, setPreacher] = useState('');
   const [requestedPage, setPage] = useState(() => {
     const page = Number(new URLSearchParams(window.location.search).get('page'));
-    return Number.isSafeInteger(page) && page > 0 ? page : initialPage;
+    return Number.isSafeInteger(page) && page > 0 ? page : 1;
   });
 
   function changePage(page: number) {
@@ -72,7 +71,7 @@ export function SermonsPage({ sermonId, initialPage = 1 }: { sermonId?: string; 
     const sermon = sermons.find(item => item.id === sermonId)
       ?? (!loaded.sermons ? LEGACY_SERMONS.find(item => item.id === sermonId) : undefined);
     return sermon ? <SermonDetail sermon={sermon} /> : (
-      <PageIntro title="Sermon unavailable" label="Sermons" description="Browse the archive for another message." parent={{ title: 'Sermons', route: archiveLink }} />
+      <PageIntro title="Sermon unavailable" label="Sermons" description="Browse all sermons for another message." parent={{ title: 'Sermons', route: archiveLink }} />
     );
   }
 
@@ -88,16 +87,27 @@ export function SermonsPage({ sermonId, initialPage = 1 }: { sermonId?: string; 
   return (
     <div className="bg-[#fcfaf7]">
       <PageIntro title="Sermons & Bible Teachings" label="Media & teaching library"
-        description="Explore Sunday sermons, Bible studies, conferences, and retreat recordings from the church archive.">
+        description="Explore Sunday sermons, Bible studies, conferences, and teachings from Dominion Hope of Glory.">
         <div className="page-intro-actions">
-          <a className="home-button" href="/watch"><Play aria-hidden="true" /> Watch live</a>
+          <a
+            className="home-button"
+            href="/watch"
+            onClick={(e) => {
+              e.preventDefault();
+              window.history.pushState(null, '', '/watch');
+              window.dispatchEvent(new PopStateEvent('popstate', { state: null }));
+              window.scrollTo({ top: 0, behavior: 'instant' });
+            }}
+          >
+            <Play aria-hidden="true" /> Watch live
+          </a>
           <a className="home-button home-button-outline" href={CHURCH_INFO.youtubeUrl} target="_blank" rel="noreferrer">YouTube channel</a>
         </div>
       </PageIntro>
       <section id="sermon-archive" aria-labelledby="sermon-archive-title" className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-8 sm:py-12">
         <div className="space-y-4 rounded-2xl border border-stone-200 bg-white p-4 sm:p-6">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 id="sermon-archive-title" tabIndex={-1} className="font-serif-heading text-2xl text-[#08281d]">Browse the archive</h2>
+            <h2 id="sermon-archive-title" tabIndex={-1} className="font-serif-heading text-2xl text-[#08281d]">Browse all sermons & teachings</h2>
             <p className="text-sm text-stone-600" role="status">{filtered.length} messages{totalPages > 1 && ` · Page ${page} of ${totalPages}`}</p>
           </div>
           <div className="grid gap-3 sm:grid-cols-[2fr_1fr_1fr]">

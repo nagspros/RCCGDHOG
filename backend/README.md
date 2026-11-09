@@ -62,7 +62,7 @@ The composer includes editable templates for Contact Us follow-ups, prayer follo
 
 In **Live Stream Manager**, save a YouTube video ID or a watch/live link. The Watch page refreshes the player settings automatically and links to the channel when no video is selected. To discover public embeddable live broadcasts automatically, configure `YOUTUBE_API_KEY` with YouTube Data API v3 enabled and `YOUTUBE_CHANNEL_ID`. Discovery is cached to limit API usage. Create and start the actual broadcast in YouTube Studio.
 
-In **Services**, change a service from Draft to Scheduled to show it under **Upcoming church events**. In **Parish Announcements**, set publication dates to show notices on the homepage. The Giving page links to the existing church payment portal. Staff can record confirmed gifts in the ledger.
+In **Services**, change a service from Draft to Scheduled to show it under **Upcoming church events**. In **Parish Announcements**, set publication dates to show notices on the homepage. The Giving page lists the church’s Zelle and SMS giving options. Staff can record confirmed gifts in the ledger.
 
 ## Checks
 

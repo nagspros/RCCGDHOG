@@ -32,7 +32,7 @@ export function EventsPage({ eventId }: { eventId?: string }) {
             <h2 className="font-serif-heading text-2xl text-[#08281d]">Event details</h2>
             <ArchiveContent blocks={event.content} />
           </section>}
-          <a className="home-button" href={event.sourceUrl} target="_blank" rel="noreferrer">View original event page <ArrowRight aria-hidden="true" /></a>
+          <a className="home-button" href="/events">Back to events <ArrowRight aria-hidden="true" /></a>
         </article>
       </>
     );

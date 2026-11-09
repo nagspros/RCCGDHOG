@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState, useEffect } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Navbar } from './components/Navbar';
 import { ExtendedFooter } from './components/ExtendedFooter';
 import './site.css';
@@ -20,7 +20,7 @@ import { ContactPage } from './pages/ContactPage';
 import { ConnectPage } from './pages/ConnectPage';
 import { WatchPage } from './pages/WatchPage';
 import { GalleryPage } from './pages/GalleryPage';
-import { EventsPage, GalleryDetailPage, MinistryDetailPage, ProgrammeDetailPage } from './pages/ArchivePages';
+import { GalleryDetailPage, MinistryDetailPage, ProgrammeDetailPage } from './pages/ArchivePages';
 
 const AdminDashboardPage = lazy(async () => {
   const { AdminDashboardPage } = await import('./pages/AdminDashboardPage');
@@ -28,6 +28,7 @@ const AdminDashboardPage = lazy(async () => {
 });
 
 export default function App() {
+  const shouldReduceMotion = useReducedMotion();
   const [currentRoute, setCurrentRoute] = useState<string>(() => {
     return (window.location.hash.startsWith('#/') ? window.location.hash.slice(1) : window.location.pathname).replace(/\/$/, '') || '/';
   });
@@ -52,11 +53,10 @@ export default function App() {
   const renderCurrentPage = () => {
     const [, area, entry] = currentRoute.split('/');
     if (entry) {
-      if (area === 'sermons' || (area === 'all-sermons' && entry !== 'page')) return <SermonsPage sermonId={entry} />;
-      if (area === 'events') return <EventsPage eventId={entry} />;
+      if (area === 'sermons') return <SermonsPage sermonId={entry} />;
       if (area === 'gallery') return <GalleryDetailPage photoId={entry} />;
       if (area === 'ministries') return <MinistryDetailPage ministryId={entry} />;
-      if (area === 'programmes') return <ProgrammeDetailPage programmeId={entry} />;
+      if (area === 'programmes' || area === 'events') return <ProgrammeDetailPage programmeId={entry} />;
     }
     switch (currentRoute) {
       case '/about':
@@ -69,15 +69,10 @@ export default function App() {
         return <MinistriesPage onNavigate={navigateTo} />;
       case '/programmes':
       case '/programs':
+      case '/events':
         return <ProgrammesPage onNavigate={navigateTo} />;
       case '/sermons':
-      case '/all-sermons':
-      case '/all-sermons/page/2':
-      case '/all-sermons/page/3':
-      case '/all-sermons/page/4':
-        return <SermonsPage initialPage={area === 'all-sermons' && entry === 'page' ? Number(currentRoute.split('/')[3]) : 1} />;
-      case '/events':
-        return <EventsPage />;
+        return <SermonsPage />;
       case '/visit':
         return <VisitPage onNavigate={navigateTo} />;
       case '/prayer':
@@ -117,10 +112,10 @@ export default function App() {
           id="site-content"
           key={currentRoute}
           tabIndex={-1}
-          initial={{ opacity: 0, y: 10 }}
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+          exit={shouldReduceMotion ? undefined : { opacity: 0, y: -8 }}
+          transition={{ duration: shouldReduceMotion ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }}
           className="flex-1 w-full"
         >
           {page || <HomePage />}

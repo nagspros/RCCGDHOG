@@ -2,9 +2,8 @@ import { usePublicData } from '../data/api';
 import { INITIAL_CHURCH_CONTACT, type PublicSite } from '../data/adminStore';
 import { PageIntro } from '../components/PageIntro';
 import React, { useState } from 'react';
-import { Heart, Smartphone, CreditCard, Copy, Check, ArrowRight } from 'lucide-react';
+import { Smartphone, Copy, Check } from 'lucide-react';
 import { SectionReveal } from '../components/SectionReveal';
-import { CHURCH_INFO } from '../data/churchData';
 import { motion } from 'framer-motion';
 
 interface GivingPageProps {
@@ -57,7 +56,7 @@ export const GivingPage: React.FC<GivingPageProps> = ({ onNavigate }) => {
           </motion.div>
         </SectionReveal>
 
-        {/* 3 Verified Giving Channels from PDF page 8 & 14 */}
+        {/* Giving options */}
         <SectionReveal delay={0.07} yOffset={16}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
             
@@ -153,42 +152,6 @@ export const GivingPage: React.FC<GivingPageProps> = ({ onNavigate }) => {
             </motion.div>
 
           </div>
-        </SectionReveal>
-
-        {/* Method 3: Card Giving Portal */}
-        <SectionReveal delay={0.09} yOffset={18}>
-          <motion.div
-            className="bg-white rounded-3xl p-8 sm:p-10 border border-stone-200 shadow-sm space-y-6 hover:border-[#b48227]/60 transition-all"
-            whileHover={{ y: -4, boxShadow: '0 12px 32px 0 rgba(8,40,29,0.10)' }}
-            transition={{ duration: 0.2 }}
-          >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-amber-100 text-[#b48227] flex items-center justify-center">
-                  <CreditCard className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="font-serif-heading font-bold text-stone-900 text-2xl">
-                    Card Checkout (Online Portal)
-                  </h3>
-                  <p className="text-xs sm:text-sm text-stone-500">
-                    Visa, MasterCard, American Express, Discover
-                  </p>
-                </div>
-              </div>
-            </div>
-            <p className="text-sm text-stone-700">Use the church’s giving portal to choose your amount and complete your donation.</p>
-            <motion.a
-              href={CHURCH_INFO.giving.onlinePortal}
-              target="_blank"
-              rel="noreferrer"
-              className="home-button"
-              whileHover={{ scale: 1.03, y: -2 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              <ArrowRight aria-hidden="true" /> Open the giving portal
-            </motion.a>
-          </motion.div>
         </SectionReveal>
 
       </div>

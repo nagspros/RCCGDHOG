@@ -1,6 +1,5 @@
 import { ArrowLeft, ArrowRight, Eye, EyeOff, LockKeyhole, Mail } from 'lucide-react';
 import { RccgLogo } from './RccgLogo';
-import { CHURCH_INFO } from '../data/churchData';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { StaffSite } from '../data/adminStore';
@@ -17,7 +16,7 @@ export function StaffGate({ children }: {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  const [email, setEmail] = useState(CHURCH_INFO.email);
+  const [email, setEmail] = useState('admin@rccgdhog.org');
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState('');
   const login = useServerForm();
@@ -45,7 +44,7 @@ export function StaffGate({ children }: {
       setSite(undefined);
       setAccount(undefined);
     }, updatedEmail => {
-      setEmail(updatedEmail ?? account.email);
+      if (updatedEmail) setEmail(updatedEmail);
       setNotice(updatedEmail
         ? 'Sign-in details updated. Sign in again to continue.'
         : 'Your session has ended. Sign in again, then return to Account Settings.');
@@ -78,7 +77,7 @@ export function StaffGate({ children }: {
           <div className="grid size-11 place-items-center rounded-xl bg-[#e7efe7] text-[#174b35]"><LockKeyhole size={20} aria-hidden="true" /></div>
           <div>
             <h1 id="staff-title" className="font-serif-heading text-4xl text-[#05291f]">Staff sign-in</h1>
-            <p className="mt-2 text-sm text-stone-600">Use your church staff account to continue.</p>
+            <p className="mt-2 text-sm text-stone-600">Enter your staff password to continue.</p>
           </div>
           {notice && <p role="status" className="rounded-lg bg-[#e7efe7] p-3 text-sm text-[#174b35]">{notice}</p>}
           <FormError error={error || login.error} />
@@ -87,7 +86,7 @@ export function StaffGate({ children }: {
               event.preventDefault();
               setError('');
               setNotice('');
-              const user = await login.submit<Account>('/auth/login', { email, password });
+              const user = await login.submit<Account>('/auth/login', { email: email.trim() || 'admin@rccgdhog.org', password });
               setPassword('');
               setShowPassword(false);
               if (!user) return;
@@ -112,18 +111,18 @@ export function StaffGate({ children }: {
               <div className="relative -mt-2">
                 <LockKeyhole size={17} className="pointer-events-none absolute top-3.5 left-3 text-[#53645a]" aria-hidden="true" />
                 <input id="staff-password" className="w-full rounded-xl border border-[#d8d1c2] bg-white py-3 pr-12 pl-10 text-sm focus-visible:outline-2 focus-visible:outline-[#38684b]"
-                  type={showPassword ? 'text' : 'password'} autoComplete="current-password" value={password} onChange={event => setPassword(event.target.value)} required />
+                  type={showPassword ? 'text' : 'password'} autoComplete="current-password" placeholder="Enter password" value={password} onChange={event => setPassword(event.target.value)} required />
                 <button type="button" aria-label={showPassword ? 'Hide password' : 'Show password'} onClick={() => setShowPassword(visible => !visible)}
                   className="absolute inset-y-0 right-0 grid w-11 place-items-center rounded-r-xl text-[#53645a] hover:bg-[#edf3ec]">
                   {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
                 </button>
               </div>
-              <button disabled={login.busy} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#05291f] px-5 py-3 font-semibold text-[#fae19c] hover:bg-[#174b35] disabled:opacity-50">
+              <button disabled={login.busy} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#05291f] px-5 py-3 font-semibold text-[#fae19c] hover:bg-[#174b35] disabled:opacity-50 cursor-pointer">
                 {login.busy ? 'Signing in…' : 'Sign in'} <ArrowRight size={17} aria-hidden="true" />
               </button>
             </form>
           )}
-          <p className="border-t border-[#e7dfce] pt-4 text-sm text-stone-600">Need access? <a href={`mailto:${CHURCH_INFO.email}`} className="font-semibold text-[#174b35] underline">Contact the church office</a>.</p>
+          <p className="border-t border-[#e7dfce] pt-4 text-sm text-stone-600">Need access? <a href="/contact" className="font-semibold text-[#174b35] underline">Contact the church office</a>.</p>
         </section>
       </div>
     </main>

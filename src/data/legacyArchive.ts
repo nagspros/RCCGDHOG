@@ -12,7 +12,6 @@ export type ArchiveEvent = {
   summary: string;
   content: ArchiveBlock[];
   imageSrc: string;
-  sourceUrl: string;
 };
 
 export const LEGACY_SERMONS: Sermon[] = archive.sermons;

@@ -74,7 +74,6 @@ export function ExtendedFooter() {
         </div>
         <div className="site-footer-bottom">
           <p>© {new Date().getFullYear()} RCCG Dominion Hope of Glory</p>
-          <a href="/admin" onClick={(e) => { e.preventDefault(); navigate('/admin'); }}>Staff Admin</a>
         </div>
       </div>
     </footer>

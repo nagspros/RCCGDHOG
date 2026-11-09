@@ -23,7 +23,6 @@ export interface Sermon {
   imageSrc?: string;
   audioUrl?: string;
   series?: string;
-  sourceUrl?: string;
 }
 
 export interface ArchiveBlock {
@@ -58,12 +57,11 @@ export const CHURCH_INFO = {
   // Official published address per PDF content audit & RCCG North America parish listing
   officialParishAddress: "337 Avon Avenue, Newark, NJ 07108, United States",
   displayAddress: "337 Avon Avenue, Newark, NJ 07108",
-  historicalMockupAddress: "31-39 Van Buren St, Newark, NJ 07105",
   cityStateZip: "Newark, NJ 07108",
   
   phone: "(973) 609-5858",
   directoryPhone: "(609) 744-7424",
-  email: "admin@rccgdhog.org",
+  email: "contact@rccgdhog.org",
   
   // Social & Media
   youtubeUrl: "https://www.youtube.com/channel/UCbaf7qittz4vReSJfeJUiZA",
@@ -74,8 +72,7 @@ export const CHURCH_INFO = {
   giving: {
     smsText: "GIVE",
     smsNumber: "973-609-5858",
-    zelleEmail: "dhopeofglory@gmail.com",
-    onlinePortal: "https://rccgdhog.org/donate.html"
+    zelleEmail: "dhopeofglory@gmail.com"
   },
   
   // Core mission and statement
