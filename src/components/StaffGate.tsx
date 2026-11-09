@@ -16,7 +16,7 @@ export function StaffGate({ children }: {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  const [email, setEmail] = useState('admin@rccgdhog.org');
+  const [email, setEmail] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState('');
   const login = useServerForm();
@@ -41,10 +41,11 @@ export function StaffGate({ children }: {
   if (account && site) {
     return children(site, account, async () => {
       await api('/auth/logout', 'POST');
+      setEmail('');
       setSite(undefined);
       setAccount(undefined);
     }, updatedEmail => {
-      if (updatedEmail) setEmail(updatedEmail);
+      setEmail('');
       setNotice(updatedEmail
         ? 'Sign-in details updated. Sign in again to continue.'
         : 'Your session has ended. Sign in again, then return to Account Settings.');
@@ -77,7 +78,7 @@ export function StaffGate({ children }: {
           <div className="grid size-11 place-items-center rounded-xl bg-[#e7efe7] text-[#174b35]"><LockKeyhole size={20} aria-hidden="true" /></div>
           <div>
             <h1 id="staff-title" className="font-serif-heading text-4xl text-[#05291f]">Staff sign-in</h1>
-            <p className="mt-2 text-sm text-stone-600">Enter your staff password to continue.</p>
+            <p className="mt-2 text-sm text-stone-600">Enter your staff email and password to continue.</p>
           </div>
           {notice && <p role="status" className="rounded-lg bg-[#e7efe7] p-3 text-sm text-[#174b35]">{notice}</p>}
           <FormError error={error || login.error} />
@@ -86,7 +87,7 @@ export function StaffGate({ children }: {
               event.preventDefault();
               setError('');
               setNotice('');
-              const user = await login.submit<Account>('/auth/login', { email: email.trim() || 'admin@rccgdhog.org', password });
+              const user = await login.submit<Account>('/auth/login', { email: email.trim(), password });
               setPassword('');
               setShowPassword(false);
               if (!user) return;

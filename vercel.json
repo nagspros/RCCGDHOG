@@ -9,6 +9,6 @@
   },
   "rewrites": [
     { "source": "/api/:path*", "destination": "/api" },
-    { "source": "/((?!api).*)", "destination": "/index.html" }
+    { "source": "/:section(about|ministries|programmes|programs|sermons|events|visit|prayer|ask-pastor|give|contact|connect|watch|gallery|admin)/:path*", "destination": "/index.html" }
   ]
 }

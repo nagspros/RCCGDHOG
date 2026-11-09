@@ -20,7 +20,7 @@ import { ContactPage } from './pages/ContactPage';
 import { ConnectPage } from './pages/ConnectPage';
 import { WatchPage } from './pages/WatchPage';
 import { GalleryPage } from './pages/GalleryPage';
-import { GalleryDetailPage, MinistryDetailPage, ProgrammeDetailPage } from './pages/ArchivePages';
+import { EventsPage, GalleryDetailPage, MinistryDetailPage, ProgrammeDetailPage } from './pages/ArchivePages';
 
 const AdminDashboardPage = lazy(async () => {
   const { AdminDashboardPage } = await import('./pages/AdminDashboardPage');
@@ -54,9 +54,10 @@ export default function App() {
     const [, area, entry] = currentRoute.split('/');
     if (entry) {
       if (area === 'sermons') return <SermonsPage sermonId={entry} />;
+      if (area === 'events') return <EventsPage eventId={entry} />;
       if (area === 'gallery') return <GalleryDetailPage photoId={entry} />;
       if (area === 'ministries') return <MinistryDetailPage ministryId={entry} />;
-      if (area === 'programmes' || area === 'events') return <ProgrammeDetailPage programmeId={entry} />;
+      if (area === 'programmes') return <ProgrammeDetailPage programmeId={entry} />;
     }
     switch (currentRoute) {
       case '/about':
@@ -69,10 +70,11 @@ export default function App() {
         return <MinistriesPage onNavigate={navigateTo} />;
       case '/programmes':
       case '/programs':
-      case '/events':
         return <ProgrammesPage onNavigate={navigateTo} />;
       case '/sermons':
         return <SermonsPage />;
+      case '/events':
+        return <EventsPage />;
       case '/visit':
         return <VisitPage onNavigate={navigateTo} />;
       case '/prayer':
