@@ -92,7 +92,10 @@ export function Navbar({ currentRoute }: { currentRoute: string }) {
         </motion.a>
         <button className="home-menu-toggle" ref={mobileButton} type="button"
           aria-label={mobileOpen ? 'Close navigation' : 'Open navigation'}
-          aria-expanded={mobileOpen} aria-controls="site-nav" onClick={() => setMobileOpen(open => !open)}>
+          aria-expanded={mobileOpen} aria-controls="site-nav" onClick={() => {
+            if (mobileOpen) closeMenus();
+            else setMobileOpen(true);
+          }}>
           {mobileOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
         </button>
         <nav className="home-nav site-nav" id="site-nav" aria-label="Main navigation" data-open={mobileOpen}>
