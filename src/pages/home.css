@@ -322,47 +322,20 @@
 .home-connect .home-chevron { position: absolute; inset: auto 3px 5px auto; width: .8em; margin: 0; }
 
 @media (max-width: 879px) {
-  .home-header-inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 16px;
-    gap: 12px;
-  }
-  .home-brand {
-    order: 0;
-    margin-inline-end: auto;
-    font-size: clamp(.72rem, 1.4vw, .95rem);
-  }
-  .home-header-visit {
-    order: 1;
-    min-height: 38px;
-    padding: 6px 14px;
-    font-size: 0.8rem;
-    margin-inline-start: auto;
-  }
-  .home-menu-toggle {
-    order: 2;
-    display: grid;
-    place-items: center;
-    width: 42px;
-    height: 42px;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    color: #fffdf5;
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-  .home-menu-toggle:hover {
-    background: #0c4735;
-  }
+  .home-header-visit { order: -1; margin-inline-start: auto; }
+  .home-brand { order: -2; margin-inline-end: 0; }
+  .home-menu-toggle { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 8px; cursor: pointer; }
+  .home-menu-toggle:hover { background: #0c4735; }
   .home-nav {
     display: none;
     position: absolute;
     inset: 100% 0 auto;
-    width: 100%;
+    padding: 8px 14px 14px;
+    background: var(--home-deep);
+    border-top: 1px solid #ffffff26;
+    box-shadow: 0 12px 22px #0004;
   }
+  .home-nav a { padding: 0 12px; }
 }
 
 @media (max-width: 450px) {

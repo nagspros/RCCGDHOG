@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown, Menu, X } from 'lucide-react';
 import { RccgLogo } from './RccgLogo';
 
-const mainLinks: [string, string][] = [
+const mainLinks = [
   ['Home', '/'],
   ['About', '/about'],
   ['Ministries', '/ministries'],
@@ -15,26 +15,15 @@ const mainLinks: [string, string][] = [
 const linkGroups = [
   {
     title: 'Our church',
-    links: [
-      ['Meet the Pastor', '/about/pastor'],
-      ['Church Leadership', '/about/leadership'],
-      ['Photo Gallery', '/gallery'],
-    ],
+    links: [['Meet the Pastor', '/about/pastor'], ['Church Leadership', '/about/leadership'], ['Photo Gallery', '/gallery']],
   },
   {
     title: 'Worship & care',
-    links: [
-      ['Watch Online', '/watch'],
-      ['Prayer Request', '/prayer'],
-      ['Ask the Pastor', '/ask-pastor'],
-    ],
+    links: [['Watch Online', '/watch'], ['Prayer Request', '/prayer'], ['Ask the Pastor', '/ask-pastor']],
   },
   {
     title: 'Get involved',
-    links: [
-      ['Connect & Membership', '/connect'],
-      ['Give', '/give'],
-    ],
+    links: [['Connect & Membership', '/connect'], ['Give', '/give']],
   },
 ];
 
@@ -47,15 +36,14 @@ function navigateTo(route: string) {
 
 export function Navbar({ currentRoute }: { currentRoute: string }) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [desktopOthersOpen, setDesktopOthersOpen] = useState(false);
-  const [mobileOthersOpen, setMobileOthersOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const header = useRef<HTMLElement>(null);
-  const desktopOthersButton = useRef<HTMLButtonElement>(null);
+  const moreButton = useRef<HTMLButtonElement>(null);
   const mobileButton = useRef<HTMLButtonElement>(null);
 
   const closeMenus = () => {
     setMobileOpen(false);
-    setDesktopOthersOpen(false);
+    setMoreOpen(false);
   };
 
   useEffect(() => {
@@ -63,36 +51,27 @@ export function Navbar({ currentRoute }: { currentRoute: string }) {
   }, [currentRoute]);
 
   useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 880) {
-        setMobileOpen(false);
-      }
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  useEffect(() => {
-    if (!mobileOpen && !desktopOthersOpen) return;
+    if (!mobileOpen && !moreOpen) return;
 
     const handleOutsidePress = (event: PointerEvent) => {
-      if (event.target instanceof Node && !header.current?.contains(event.target)) {
-        closeMenus();
-      }
+      if (event.target instanceof Node && !header.current?.contains(event.target)) closeMenus();
     };
     document.addEventListener('pointerdown', handleOutsidePress);
     return () => document.removeEventListener('pointerdown', handleOutsidePress);
-  }, [mobileOpen, desktopOthersOpen]);
+  }, [mobileOpen, moreOpen]);
 
-  const isOtherActive = linkGroups.some(group =>
-    group.links.some(([, route]) => currentRoute === route)
+  const navLink = ([label, route]: string[]) => (
+    <a key={route} href={route} aria-current={currentRoute === route ? 'page' : undefined}
+      onClick={(e) => { e.preventDefault(); closeMenus(); navigateTo(route); }}>
+      {label}
+    </a>
   );
 
   return (
     <header className="home-header site-header" ref={header} onKeyDown={event => {
-      if (event.key === 'Escape' && (mobileOpen || desktopOthersOpen)) {
+      if (event.key === 'Escape' && (mobileOpen || moreOpen)) {
         closeMenus();
-        (mobileOpen ? mobileButton : desktopOthersButton).current?.focus();
+        (mobileOpen ? mobileButton : moreButton).current?.focus();
       }
     }}>
       <div className="home-header-inner">
@@ -100,7 +79,6 @@ export function Navbar({ currentRoute }: { currentRoute: string }) {
           event.preventDefault();
           document.getElementById('site-content')?.focus();
         }}>Skip to content</a>
-
         <motion.a
           className="home-brand"
           href="/"
@@ -112,146 +90,40 @@ export function Navbar({ currentRoute }: { currentRoute: string }) {
           <RccgLogo size={44} />
           <span>RCCG<br />Dominion Hope<br />of Glory (DHOG)</span>
         </motion.a>
-
         <button className="home-menu-toggle" ref={mobileButton} type="button"
           aria-label={mobileOpen ? 'Close navigation' : 'Open navigation'}
           aria-expanded={mobileOpen} aria-controls="site-nav" onClick={() => setMobileOpen(open => !open)}>
           {mobileOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
         </button>
-
         <nav className="home-nav site-nav" id="site-nav" aria-label="Main navigation" data-open={mobileOpen}>
-          {/* Desktop Navigation (>= 880px) */}
-          <div className="site-nav-desktop">
-            <div className="site-nav-primary">
-              {mainLinks.map(([label, route]) => (
-                <a
-                  key={route}
-                  href={route}
-                  aria-current={currentRoute === route ? 'page' : undefined}
-                  onClick={(e) => { e.preventDefault(); closeMenus(); navigateTo(route); }}
+          <div className="site-nav-primary">{mainLinks.map(navLink)}</div>
+          <div className="site-nav-more">
+            <button ref={moreButton} className="site-more-toggle" type="button" aria-expanded={moreOpen}
+              aria-controls="site-nav-groups" onClick={() => setMoreOpen(open => !open)}>
+              More <ChevronDown aria-hidden="true" />
+            </button>
+            <AnimatePresence>
+              {moreOpen && (
+                <motion.div
+                  className="site-nav-groups"
+                  id="site-nav-groups"
+                  data-open="true"
+                  initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 6, scale: 0.97 }}
+                  transition={{ duration: 0.16, ease: 'easeOut' }}
                 >
-                  {label}
-                </a>
-              ))}
-            </div>
-
-            <div className="site-nav-more">
-              <button
-                ref={desktopOthersButton}
-                className={`site-more-toggle ${isOtherActive ? 'active' : ''}`}
-                type="button"
-                aria-expanded={desktopOthersOpen}
-                aria-controls="site-nav-groups"
-                onClick={() => setDesktopOthersOpen(open => !open)}
-              >
-                Others <ChevronDown aria-hidden="true" className={desktopOthersOpen ? 'open' : ''} />
-              </button>
-              <AnimatePresence>
-                {desktopOthersOpen && (
-                  <motion.div
-                    className="site-nav-groups"
-                    id="site-nav-groups"
-                    data-open="true"
-                    initial={{ opacity: 0, y: 8, scale: 0.97 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 6, scale: 0.97 }}
-                    transition={{ duration: 0.16, ease: 'easeOut' }}
-                  >
-                    {linkGroups.map(group => (
-                      <div key={group.title}>
-                        <p>{group.title}</p>
-                        {group.links.map(([label, route]) => (
-                          <a
-                            key={route}
-                            href={route}
-                            aria-current={currentRoute === route ? 'page' : undefined}
-                            onClick={(e) => { e.preventDefault(); closeMenus(); navigateTo(route); }}
-                          >
-                            {label}
-                          </a>
-                        ))}
-                      </div>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </div>
-
-          {/* Mobile Navigation (< 880px) */}
-          <div className="site-nav-mobile">
-            <div className="site-mobile-primary">
-              {mainLinks.map(([label, route]) => (
-                <a
-                  key={route}
-                  href={route}
-                  aria-current={currentRoute === route ? 'page' : undefined}
-                  className={`site-mobile-link ${currentRoute === route ? 'active' : ''}`}
-                  onClick={(e) => { e.preventDefault(); closeMenus(); navigateTo(route); }}
-                >
-                  {label}
-                </a>
-              ))}
-
-              <button
-                type="button"
-                className={`site-mobile-others-btn ${mobileOthersOpen || isOtherActive ? 'active' : ''}`}
-                aria-expanded={mobileOthersOpen}
-                onClick={() => setMobileOthersOpen(open => !open)}
-              >
-                <span>Others</span>
-                <ChevronDown
-                  className={`site-mobile-chevron ${mobileOthersOpen ? 'open' : ''}`}
-                  aria-hidden="true"
-                />
-              </button>
-
-              <AnimatePresence initial={false}>
-                {mobileOthersOpen && (
-                  <motion.div
-                    className="site-mobile-dropdown"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                  >
-                    <div className="site-mobile-groups">
-                      {linkGroups.map(group => (
-                        <div key={group.title} className="site-mobile-group">
-                          <p className="site-mobile-group-title">{group.title}</p>
-                          <div className="site-mobile-group-links">
-                            {group.links.map(([label, route]) => (
-                              <a
-                                key={route}
-                                href={route}
-                                aria-current={currentRoute === route ? 'page' : undefined}
-                                className={`site-mobile-sublink ${currentRoute === route ? 'active' : ''}`}
-                                onClick={(e) => { e.preventDefault(); closeMenus(); navigateTo(route); }}
-                              >
-                                {label}
-                              </a>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
+                  {linkGroups.map(group => (
+                    <div key={group.title}>
+                      <p>{group.title}</p>
+                      {group.links.map(navLink)}
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            <div className="site-mobile-action">
-              <a
-                href="/visit"
-                className={`site-mobile-visit-btn ${currentRoute === '/visit' ? 'active' : ''}`}
-                onClick={(e) => { e.preventDefault(); closeMenus(); navigateTo('/visit'); }}
-              >
-                Plan a Visit
-              </a>
-            </div>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </nav>
-
         <motion.a
           className="home-button home-header-visit"
           href="/visit"
