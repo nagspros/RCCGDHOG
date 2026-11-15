@@ -29,7 +29,13 @@ type Notification = { id: string; created: string; subject: string; state: strin
 type History = { configured: boolean; campaigns: Campaign[]; notifications: Notification[] };
 type Delivery = { recipient: string; state: string; provider_id?: string; error?: string };
 type SubmissionStatus = 'New' | 'In progress' | 'Closed';
-type Submission = { id: string; kind: string; status: SubmissionStatus; data: Record<string, string> };
+type SubmissionAnswer = { label: string; value: string | boolean };
+type Submission = { id: string; kind: string; status: SubmissionStatus; data: {
+  submittedAt: string; name?: string; photoId?: string; photoTitle?: string; formTitle?: string;
+  answers?: SubmissionAnswer[];
+  [key: string]: string | SubmissionAnswer[] | undefined;
+} };
+const submissionLabels: Record<string, string> = { visit: 'Visit plan', ride: 'Ride request', ministry: 'Ministry inquiry' };
 
 const emptyMember = { name: '', email: '', phone: '', status: 'active' as Member['status'], subscribed: false };
 const emptyMail = { audience: 'member' as Campaign['audience'], memberId: '', subject: '', body: '', eventId: '', sendAt: '' };
@@ -345,17 +351,26 @@ export function SubmissionInbox() {
   return (
     <section className="space-y-4 text-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="font-serif-heading text-3xl">Visitor &amp; Ministry Inbox</h2>
+        <h2 className="font-serif-heading text-3xl">Submissions Inbox</h2>
         <button className={secondary} onClick={() => void refresh()}>Refresh</button>
       </div>
       <FormError error={error} />
-      {!items.length && <p className={panel}>Visit plans, ride requests, and ministry inquiries appear here.</p>}
+      {!items.length && <p className={panel}>Visit plans, ride requests, ministry inquiries, and gallery form responses appear here.</p>}
       {items.map(item => (
         <article className={panel} key={item.id}>
-          <h3 className="font-serif-heading text-xl">{item.data.name} · {({ visit: 'Visit plan', ride: 'Ride request', ministry: 'Ministry inquiry' })[item.kind]}</h3>
+          <h3 className="font-serif-heading text-xl">{item.kind === 'gallery'
+            ? `${item.data.formTitle} · ${item.data.photoTitle}`
+            : `${item.data.name} · ${submissionLabels[item.kind]}`}</h3>
+          {item.data.photoId && <a href={`/gallery/${encodeURIComponent(item.data.photoId)}`} className="font-semibold underline">View gallery page</a>}
           <p>{new Date(item.data.submittedAt).toLocaleString()}</p>
           <dl className="grid gap-2">
-            {Object.entries(item.data).filter(([key, value]) => !['name', 'id', 'submittedAt'].includes(key) && value).map(([key, value]) => (
+            {item.data.answers?.map(({ label, value }, index) => (
+              <div key={index} className="break-words">
+                <dt className="font-semibold">{label}</dt>
+                <dd className="whitespace-pre-wrap">{typeof value === 'boolean' ? (value ? 'Yes' : 'No') : value || '—'}</dd>
+              </div>
+            ))}
+            {item.kind !== 'gallery' && Object.entries(item.data).map(([key, value]) => typeof value === 'string' && value && !['name', 'id', 'submittedAt'].includes(key) && (
               <div key={key} className="break-words">
                 <dt className="font-semibold capitalize">{key.replace(/([A-Z])/g, ' $1')}</dt><dd className="whitespace-pre-wrap">{value}</dd>
               </div>

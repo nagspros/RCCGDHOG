@@ -2,15 +2,15 @@ import { ArrowRight, CalendarDays, MapPin } from 'lucide-react';
 import { GalleryPhoto } from './GalleryPhoto';
 import type { PublicSite } from '../data/adminStore';
 import { CHURCH_INFO, programmeSlug, WEEKLY_PROGRAMS } from '../data/churchData';
-import { GALLERY_ITEMS } from '../data/galleryData';
+import type { GalleryItem } from '../data/galleryData';
+import { LIFE_SECTION_ID } from '../data/heroSlides';
 import { archiveDate, LEGACY_SERMONS } from '../data/legacyArchive';
 
 const section = 'space-y-5 border-t border-[#e4dac8] px-5 py-8 sm:px-10 lg:px-14';
 const link = 'inline-flex items-center gap-2 font-semibold text-[#174b35] hover:underline';
 
-export function HomeExplore({ site }: { site: Partial<PublicSite> }) {
+export function HomeExplore({ site, photos }: { site: Partial<PublicSite>; photos: GalleryItem[] }) {
   const sermons = (site.sermons ?? LEGACY_SERMONS).slice(0, 3);
-  const photos = (site.gallery ?? GALLERY_ITEMS).slice(0, 4);
   const recurring = (site.recurringPrograms ?? WEEKLY_PROGRAMS).slice(0, 3);
   const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
   const upcoming = (site.services ?? []).filter(item => item.date >= today && item.status === 'Scheduled')
@@ -67,9 +67,9 @@ export function HomeExplore({ site }: { site: Partial<PublicSite> }) {
         </div>
       </section>}
 
-      {photos.length > 0 && <section className={section} aria-labelledby="home-church-life">
+      <section className={section} aria-labelledby={LIFE_SECTION_ID}>
         <div className="flex flex-wrap items-end justify-between gap-3">
-          <h2 id="home-church-life" className="font-serif-heading text-3xl text-[#08281d]">Life at DHOG</h2>
+          <h2 id={LIFE_SECTION_ID} tabIndex={-1} className="scroll-mt-24 font-serif-heading text-3xl text-[#08281d]">Life at DHOG</h2>
           <a href="/gallery" className={link}>Open the photo gallery <ArrowRight size={16} aria-hidden="true" /></a>
         </div>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -80,7 +80,7 @@ export function HomeExplore({ site }: { site: Partial<PublicSite> }) {
             </a>
           ))}
         </div>
-      </section>}
+      </section>
 
       <section className={`${section} bg-[#f6efdf]`} aria-labelledby="home-first-visit">
         <div className="flex flex-wrap items-center justify-between gap-4">

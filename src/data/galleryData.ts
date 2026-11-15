@@ -1,3 +1,5 @@
+import type { GalleryEngagement } from './galleryEngagement';
+
 export interface GalleryItem {
   id: string;
   title: string;
@@ -8,6 +10,7 @@ export interface GalleryItem {
   description: string;
   scripture?: string;
   featured?: boolean;
+  engagement?: GalleryEngagement | null;
 }
 
 export const GALLERY_CATEGORIES = [

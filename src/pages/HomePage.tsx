@@ -1,5 +1,7 @@
 import { usePublicData } from '../data/api';
 import type { PublicSite } from '../data/adminStore';
+import { GALLERY_ITEMS } from '../data/galleryData';
+import { defaultHeroSlides, lifePhotos } from '../data/heroSlides';
 import { motion } from 'framer-motion';
 import { AboutSection } from '../components/AboutSection';
 import { HomeExplore } from '../components/HomeExplore';
@@ -13,9 +15,11 @@ import './home.css';
 export function HomePage() {
   const site = usePublicData<Partial<PublicSite>>('/public/site', {});
   const announcements = site.announcements ?? [];
+  const photos = lifePhotos(site.gallery ?? GALLERY_ITEMS);
+  const slides = site.heroSlides?.length ? site.heroSlides : defaultHeroSlides(photos);
   return (
     <div className="w-full">
-      <Hero />
+      <Hero slides={slides} />
       <QuickInfoBar />
       {announcements.length > 0 && (
         <section aria-labelledby="home-announcements" className="bg-[#f6efdf] px-5 py-8 sm:px-10">
@@ -45,7 +49,7 @@ export function HomePage() {
       <AboutSection />
       <MinistriesSection />
       <SermonsSection />
-      <HomeExplore site={site} />
+      <HomeExplore site={site} photos={photos} />
       <QuickConnectCards />
     </div>
   );

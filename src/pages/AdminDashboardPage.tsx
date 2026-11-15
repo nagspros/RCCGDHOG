@@ -3,6 +3,10 @@ import { StaffGate } from '../components/StaffGate';
 import { AccountSettings } from '../components/AccountSettings';
 import { ArchivePagination } from '../components/ArchiveContent';
 import { GalleryPhoto } from '../components/GalleryPhoto';
+import { GalleryEngagementEditor } from '../components/GalleryEngagementEditor';
+import { HeroSlidesEditor } from '../components/HeroSlidesEditor';
+import { defaultHeroSlides, lifePhotos } from '../data/heroSlides';
+import type { GalleryEngagement } from '../data/galleryEngagement';
 import { AnnouncementEditor, GivingLedger, MembersMail, SubmissionInbox } from '../components/StaffOperations';
 import { FormError } from '../components/ServerForm';
 import { api, errorMessage } from '../data/api';
@@ -88,6 +92,7 @@ type TabType =
   | 'announcements'
   | 'members'
   | 'visitorInbox'
+  | 'heroSlides'
   | 'accountSettings';
 
 export function AdminDashboardPage({ onNavigate }: AdminDashboardPageProps) {
@@ -138,6 +143,14 @@ function Dashboard({ initial, onNavigate, signOut, role, email, returnToSignIn }
 
   const [isGalleryModalOpen, setIsGalleryModalOpen] = useState(false);
   const [editingGalleryItem, setEditingGalleryItem] = useState<GalleryItem | null>(null);
+  const [galleryEngagement, setGalleryEngagement] = useState<GalleryEngagement>({ published: false, links: [], form: null });
+
+  function openGalleryEditor(item: GalleryItem | null) {
+    setSaveError('');
+    setEditingGalleryItem(item);
+    setGalleryEngagement(item?.engagement ?? { published: false, links: [], form: null });
+    setIsGalleryModalOpen(true);
+  }
 
   const [isLiveRundownOpen, setIsLiveRundownOpen] = useState(false);
   const [activeSegmentIndex, setActiveSegmentIndex] = useState(0);
@@ -152,10 +165,11 @@ function Dashboard({ initial, onNavigate, signOut, role, email, returnToSignIn }
     outstanding.current += 1;
     const attempt = generation.current;
 
-    writes.current = writes.current.then(async () => {
+    const result = writes.current.then(async () => {
       try {
-        if (attempt !== generation.current) return;
+        if (attempt !== generation.current) return false;
         saved.current = await api<StaffSite>('/admin/site', 'PUT', { version: saved.current.version, data: next });
+        return true;
       } catch (cause) {
         generation.current += 1;
         const latest = await api<StaffSite>('/admin/site').catch(() => saved.current);
@@ -163,11 +177,14 @@ function Dashboard({ initial, onNavigate, signOut, role, email, returnToSignIn }
         draft.current = latest.data;
         setStore(latest.data);
         setSaveError(errorMessage(cause));
+        return false;
       } finally {
         outstanding.current -= 1;
         if (outstanding.current === 0) setSaving(false);
       }
     });
+    writes.current = result.then(() => undefined);
+    return result;
   };
 
   const refreshStore = async () => {
@@ -286,33 +303,15 @@ function Dashboard({ initial, onNavigate, signOut, role, email, returnToSignIn }
   };
 
   // Gallery CRUD
-  const handleSaveGalleryItem = (itemData: Partial<GalleryItem>) => {
-    if (editingGalleryItem) {
-      updateStore((prev) => ({
-        ...prev,
-        gallery: prev.gallery.map((g) =>
-          g.id === editingGalleryItem.id ? ({ ...g, ...itemData } as GalleryItem) : g
-        )
-      }));
-
-    } else {
-      const newItem: GalleryItem = {
-        id: `g-${Date.now()}`,
-        title: itemData.title || 'Parish Moment',
-        category: (itemData.category as any) || 'worship',
-        categoryLabel: itemData.categoryLabel || 'Sunday Worship',
-        imageSrc: itemData.imageSrc || '/assets/gallery/SUNDAY-SERVICE.jpg',
-        date: itemData.date || 'Dominion Service',
-        description: itemData.description || 'Congregation worshipping at RCCG Dominion Hope of Glory.',
-        scripture: itemData.scripture || 'Psalm 100:4',
-        featured: itemData.featured || false
-      };
-      updateStore((prev) => ({
-        ...prev,
-        gallery: [newItem, ...prev.gallery]
-      }));
-
-    }
+  const handleSaveGalleryItem = async (itemData: Omit<GalleryItem, 'id'>) => {
+    const entry = { ...editingGalleryItem, ...itemData, id: editingGalleryItem?.id ?? `g-${crypto.randomUUID()}` };
+    const committed = await updateStore(previous => ({
+      ...previous,
+      gallery: editingGalleryItem
+        ? previous.gallery.map(item => item.id === entry.id ? entry : item)
+        : [entry, ...previous.gallery],
+    }));
+    if (!committed) return;
     setIsGalleryModalOpen(false);
     setEditingGalleryItem(null);
   };
@@ -539,7 +538,8 @@ function Dashboard({ initial, onNavigate, signOut, role, email, returnToSignIn }
               {activeTab === 'giving' && 'Stewardship & Giving Records'}
               {activeTab === 'announcements' && 'Parish Bulletin & Notices'}
               {activeTab === 'members' && 'Members & Mailing'}
-              {activeTab === 'visitorInbox' && 'Visitor & Ministry Inbox'}
+              {activeTab === 'visitorInbox' && 'Submissions Inbox'}
+              {activeTab === 'heroSlides' && 'Home Hero Slides'}
               {activeTab === 'accountSettings' && 'Account Settings'}
             </span>
           </div>
@@ -793,7 +793,7 @@ function Dashboard({ initial, onNavigate, signOut, role, email, returnToSignIn }
               </div>
             </button>
 
-            {([['members', 'Members & Mailing'], ['visitorInbox', 'Visitor & Ministry Inbox'], ['accountSettings', 'Account Settings']] as const).map(([tab, label]) => (
+            {([['members', 'Members & Mailing'], ['visitorInbox', 'Submissions Inbox'], ['heroSlides', 'Home Hero Slides'], ['accountSettings', 'Account Settings']] as const).map(([tab, label]) => (
               <button type="button" key={tab} onClick={() => setActiveTab(tab)} aria-pressed={activeTab === tab}
                 className={`w-full rounded-xl px-3.5 py-2.5 text-left text-sm font-medium ${activeTab === tab ? 'bg-[#08281d] text-white' : 'hover:bg-stone-100'}`}>
                 {label}
@@ -843,6 +843,9 @@ function Dashboard({ initial, onNavigate, signOut, role, email, returnToSignIn }
           <FormError error={saveError} />
           {activeTab === 'members' && <MembersMail services={store.services} />}
           {activeTab === 'visitorInbox' && <SubmissionInbox />}
+          {activeTab === 'heroSlides' && <HeroSlidesEditor
+            slides={store.heroSlides?.length ? store.heroSlides : defaultHeroSlides(lifePhotos(store.gallery))}
+            saving={saving} onSave={heroSlides => updateStore(previous => ({ ...previous, heroSlides }))} />}
           {activeTab === 'accountSettings' && <AccountSettings email={email} saving={saving} returnToSignIn={returnToSignIn} />}
           
           {/* TAB: LIVE STREAM MANAGER */}
@@ -1051,10 +1054,7 @@ function Dashboard({ initial, onNavigate, signOut, role, email, returnToSignIn }
 
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => {
-                      setEditingGalleryItem(null);
-                      setIsGalleryModalOpen(true);
-                    }}
+                    onClick={() => openGalleryEditor(null)}
                     className="px-3.5 py-1.5 rounded-xl bg-[#08281d] text-[#fae19c] font-bold text-xs flex items-center gap-1.5 hover:bg-[#0c392a] transition-colors cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
@@ -1131,10 +1131,7 @@ function Dashboard({ initial, onNavigate, signOut, role, email, returnToSignIn }
 
                       <div className="pt-3 border-t border-stone-100 flex items-center justify-between">
                         <button
-                          onClick={() => {
-                            setEditingGalleryItem(item);
-                            setIsGalleryModalOpen(true);
-                          }}
+                          onClick={() => openGalleryEditor(item)}
                           className="text-xs text-stone-700 hover:text-[#08281d] font-semibold flex items-center gap-1"
                         >
                           <Edit3 className="w-3 h-3" />
@@ -1931,12 +1928,12 @@ function Dashboard({ initial, onNavigate, signOut, role, email, returnToSignIn }
       {/* MODAL: ADD / EDIT GALLERY ITEM */}
       {isGalleryModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-5 shadow-2xl my-8">
+          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[calc(100dvh-2rem)] overflow-y-auto p-6 sm:p-8 space-y-5 shadow-2xl">
             <div className="flex items-center justify-between border-b border-stone-100 pb-3">
               <h3 className="font-serif-heading font-bold text-xl text-stone-900">
                 {editingGalleryItem ? 'Edit Gallery Photo' : 'Add Photo to Church Gallery'}
               </h3>
-              <button onClick={() => setIsGalleryModalOpen(false)} className="text-stone-400 hover:text-stone-700">
+              <button type="button" disabled={saving} aria-label="Close photo editor" onClick={() => setIsGalleryModalOpen(false)} className="text-stone-400 hover:text-stone-700">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -1946,9 +1943,18 @@ function Dashboard({ initial, onNavigate, signOut, role, email, returnToSignIn }
                 e.preventDefault();
                 const form = e.currentTarget;
                 const fd = new FormData(form);
-                const cat = fd.get('category') as any;
+                const cat = fd.get('category') as GalleryItem['category'];
                 const catObj = GALLERY_CATEGORIES.find((c) => c.id === cat);
-                handleSaveGalleryItem({
+                const engagement = galleryEngagement.form ? {
+                  ...galleryEngagement,
+                  form: {
+                    ...galleryEngagement.form,
+                    fields: galleryEngagement.form.fields.map(field => ({
+                      ...field, options: field.options.map(option => option.trim()).filter(Boolean),
+                    })),
+                  },
+                } : galleryEngagement;
+                void handleSaveGalleryItem({
                   title: fd.get('title') as string,
                   category: cat,
                   categoryLabel: catObj ? catObj.label : 'Sunday Worship',
@@ -1956,7 +1962,8 @@ function Dashboard({ initial, onNavigate, signOut, role, email, returnToSignIn }
                   date: (fd.get('date') as string) || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
                   scripture: fd.get('scripture') as string,
                   description: fd.get('description') as string,
-                  featured: fd.get('featured') === 'on'
+                  featured: fd.get('featured') === 'on',
+                  engagement: engagement.form || engagement.links.length ? engagement : null,
                 });
               }}
               className="space-y-4 text-xs"
@@ -2044,10 +2051,13 @@ function Dashboard({ initial, onNavigate, signOut, role, email, returnToSignIn }
                   Feature in homepage & gallery highlights strip
                 </label>
               </div>
+              <GalleryEngagementEditor value={galleryEngagement} onChange={setGalleryEngagement} />
+              <FormError error={saveError} />
 
               <div className="flex items-center justify-end gap-3 pt-3">
                 <button
                   type="button"
+                  disabled={saving}
                   onClick={() => setIsGalleryModalOpen(false)}
                   className="px-4 py-2 border border-stone-300 rounded-xl text-stone-700 font-semibold"
                 >
@@ -2055,9 +2065,10 @@ function Dashboard({ initial, onNavigate, signOut, role, email, returnToSignIn }
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-[#08281d] text-[#fae19c] font-bold rounded-xl shadow hover:bg-[#0c392a]"
+                  disabled={saving}
+                  className="px-5 py-2 bg-[#08281d] text-[#fae19c] font-bold rounded-xl shadow hover:bg-[#0c392a] disabled:opacity-50"
                 >
-                  Save Photo
+                  {saving ? 'Saving…' : 'Save Photo'}
                 </button>
               </div>
             </form>

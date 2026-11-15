@@ -1,6 +1,7 @@
 import { ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { CHURCH_INFO } from '../data/churchData';
+import { ABOUT_CHURCH_IMAGE } from '../data/heroSlides';
 
 function navigate(route: string) {
   window.history.pushState(null, '', route);
@@ -19,7 +20,7 @@ export function AboutSection() {
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
     >
       <motion.img
-        src="/assets/extracted/church_building.jpg"
+        src={ABOUT_CHURCH_IMAGE}
         alt="Dominion Hope of Glory church exterior"
         width="200"
         height="105"

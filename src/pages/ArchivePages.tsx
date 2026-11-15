@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { ArchiveContent, ArchivePagination } from '../components/ArchiveContent';
 import { GalleryPhoto } from '../components/GalleryPhoto';
+import { GalleryEngagement } from '../components/GalleryEngagement';
 import { PageIntro } from '../components/PageIntro';
 import type { PublicSite } from '../data/adminStore';
 import { usePublicData } from '../data/api';
@@ -136,6 +137,7 @@ export function GalleryDetailPage({ photoId }: { photoId: string }) {
         <GalleryPhoto src={photo.imageSrc} alt={photo.title} className="max-h-[720px] w-full rounded-2xl bg-[#f6efdf] object-contain" />
         <p className="leading-relaxed text-stone-800">{photo.description}</p>
         {photo.scripture && <p className="font-semibold text-[#765618]">{photo.scripture}</p>}
+        <GalleryEngagement photoId={photo.id} />
         <a href="/gallery" className="home-button">Back to gallery <ArrowRight aria-hidden="true" /></a>
       </article>
     </>

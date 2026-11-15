@@ -24,6 +24,7 @@ Staff = Annotated[dict, Depends(auth.staff)]
 COLLECTIONS = ("services", "sermons", "gallery", "contactMessages", "prayers", "discipleship", "giving", "announcements")
 IMPORTED_CATALOGS = {"archiveEvents", "recurringPrograms", "ministries"}
 PUBLIC_SERVICE_FIELDS = ("id", "title", "serviceType", "date", "startTime", "endTime", "location", "status", "theme", "scriptureAnchor")
+GALLERY_PUBLIC_FIELDS = ("id", "title", "category", "categoryLabel", "imageSrc", "date", "description", "scripture", "featured")
 MEMBER_FIELDS = "id, email, name, phone, status, subscribed, opted_out, created"
 
 
@@ -78,7 +79,7 @@ def me(account: Staff):
 @app.get("/api/public/site")
 def public_site(request: Request):
     with db() as connection:
-        _, data = site_data(connection, ("services", "sermons", "gallery", "churchContactConfig",
+        _, data = site_data(connection, ("heroSlides", "services", "sermons", "gallery", "churchContactConfig",
                                          "announcements", *sorted(IMPORTED_CATALOGS)))
     services = [{key: row.get(key) for key in PUBLIC_SERVICE_FIELDS}
                 for row in data["services"] if row.get("status") != "Draft"]
@@ -89,7 +90,9 @@ def public_site(request: Request):
     for collection in ("sermons", "archiveEvents"):
         for row in data[collection]:
             row.pop("sourceUrl", None)
-    response = JSONResponse({"services": services, "sermons": data["sermons"], "gallery": data["gallery"],
+    gallery = [{key: row[key] for key in GALLERY_PUBLIC_FIELDS if key in row} for row in data["gallery"]]
+    slides = [slide for slide in data["heroSlides"] if slide["published"]]
+    response = JSONResponse({"heroSlides": slides, "services": services, "sermons": data["sermons"], "gallery": gallery,
                              **{key: data.get(key) for key in sorted(IMPORTED_CATALOGS)},
                              "churchContactConfig": data["churchContactConfig"], "announcements": announcements})
     etag = '"' + hashlib.sha256(response.body).hexdigest() + '"'
@@ -123,7 +126,7 @@ def admin_site(account: Staff):
 @app.put("/api/admin/site")
 def update_site(update: models.SiteUpdate, account: Staff):
     data = update.data
-    if set(data) - IMPORTED_CATALOGS != {*COLLECTIONS, "liveStream", "churchContactConfig", "lastBackupDate"}:
+    if set(data) - IMPORTED_CATALOGS - {"heroSlides"} != {*COLLECTIONS, "liveStream", "churchContactConfig", "lastBackupDate"}:
         raise HTTPException(422, "Invalid site data fields.")
     for key in COLLECTIONS:
         items = data[key]
@@ -139,6 +142,15 @@ def update_site(update: models.SiteUpdate, account: Staff):
     source = data["liveStream"].get("videoIdOrUrl")
     if source and not video_id(source):
         raise HTTPException(422, "Enter a YouTube video ID or a YouTube video link.")
+    if "heroSlides" in data:
+        if not isinstance(data["heroSlides"], list):
+            raise HTTPException(422, "Invalid hero slides.")
+        try:
+            data["heroSlides"] = [models.HeroSlide.model_validate(slide).model_dump(mode="json") for slide in data["heroSlides"]]
+        except ValidationError as error:
+            raise HTTPException(422, f"Hero slide: {error.errors()[0]['msg']}") from None
+        if len({slide["id"] for slide in data["heroSlides"]}) != len(data["heroSlides"]):
+            raise HTTPException(422, "Duplicate hero slide IDs.")
     with db(write=True) as connection:
         version, previous = site_data(connection)
         if version != update.version:
@@ -152,9 +164,44 @@ def update_site(update: models.SiteUpdate, account: Staff):
             if {row["id"] for row in private} & {row["id"] for row in data["prayers"]}:
                 raise HTTPException(403, "Restricted pastoral request.")
             data["prayers"] += private
+        data.setdefault("heroSlides", previous["heroSlides"])
+        prepare_gallery_engagement(data["gallery"], previous["gallery"])
         changes = {key: value for key, value in data.items() if previous.get(key) != value}
         version = save_site(connection, version, changes)
     return {"version": version, "data": visible_state(data, account)}
+
+
+def prepare_gallery_engagement(gallery, previous):
+    prior = {row["id"]: row.get("engagement") for row in previous}
+    for photo in gallery:
+        if photo.get("engagement") is None:
+            continue
+        try:
+            engagement = models.GalleryEngagement.model_validate(photo["engagement"]).model_dump(mode="json")
+        except ValidationError as error:
+            raise HTTPException(422, f"Gallery form or link: {error.errors()[0]['msg']}") from None
+        form = engagement["form"]
+        if form:
+            old_form = (prior.get(photo["id"]) or {}).get("form")
+            form["revision"] = old_form["revision"] if old_form and all(
+                value == old_form.get(key) for key, value in form.items() if key != "revision"
+            ) else str(uuid4())
+        photo["engagement"] = engagement
+
+
+def gallery_entry(connection, photo_id):
+    _, data = site_data(connection, ("gallery",))
+    photo = next((row for row in data["gallery"] if row["id"] == photo_id), None)
+    if photo is None:
+        raise HTTPException(404, "Gallery entry not found.")
+    return photo
+
+
+@app.get("/api/public/gallery/{photo_id}/engagement")
+def gallery_engagement(photo_id: str):
+    with db() as connection:
+        engagement = gallery_entry(connection, photo_id).get("engagement") or {}
+    return engagement if engagement.get("published") else {}
 
 
 def submission_limit(request: Request):
@@ -258,6 +305,34 @@ def ride(item: models.Ride):
 @app.post("/api/forms/ministry", status_code=201, dependencies=[Depends(submission_limit)])
 def ministry(item: models.Ministry):
     return save_form("ministry", item)
+
+
+@app.post("/api/forms/gallery/{photo_id}", status_code=201, dependencies=[Depends(submission_limit)])
+def submit_gallery_form(photo_id: str, item: models.GalleryAnswers):
+    with db(write=True) as connection:
+        photo = gallery_entry(connection, photo_id)
+        engagement = photo.get("engagement") or {}
+        form = engagement.get("form") if engagement.get("published") else None
+        if not form:
+            raise HTTPException(404, "This form is no longer accepting responses.")
+        if str(item.revision) != form["revision"]:
+            raise HTTPException(409, "This form has changed. Review the latest fields and try again.")
+        fields = models.GalleryForm.model_validate(form).fields
+        if item.answers.keys() - {field.id for field in fields}:
+            raise HTTPException(422, "The response contains unrecognized fields.")
+        answers = []
+        for field in fields:
+            value = item.answers.get(field.id, False if field.kind == "checkbox" else "")
+            if isinstance(value, str):
+                value = value.strip()
+            if not models.valid_gallery_value(field, value):
+                raise HTTPException(422, f"Enter a valid response for {field.label}.")
+            answers.append({"label": field.label, "value": value})
+        row = {"id": str(uuid4()), "submittedAt": now(), "photoId": photo_id, "photoTitle": photo["title"],
+               "formTitle": form["title"], "answers": answers}
+        connection.execute("INSERT INTO submissions (id,kind,created,data) VALUES (?,?,?,?)",
+                           (row["id"], "gallery", row["submittedAt"], json.dumps(row)))
+    return {"id": row["id"]}
 
 
 @app.get("/api/admin/submissions")

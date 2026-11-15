@@ -119,6 +119,72 @@ class ChurchApiTest(unittest.TestCase):
         signed_in = self.client.post("/api/auth/login", json={"email": original_email, "password": new_password})
         self.assertEqual(signed_in.json(), {"email": original_email, "role": "pastor"})
 
+    def test_hero_publication_and_gallery_form_submission(self):
+        self.login()
+        route = "/api/admin/site"
+        state = self.client.get(route).json()
+        photo = state["data"]["gallery"][0]
+        detail = f"/api/public/gallery/{photo['id']}/engagement"
+        submit = f"/api/forms/gallery/{photo['id']}"
+        field_id = str(uuid4())
+        form = {
+            "title": "Worship sign-up", "submitLabel": "Sign up",
+            "fields": [{"id": field_id, "label": "Email address", "kind": "email", "required": True}],
+        }
+        photo["engagement"] = {
+            "published": False, "form": form, "links": [{"label": "Worship schedule", "url": "/programmes"}],
+        }
+        slide = {
+            "id": "fixture-hero", "title": "Worship with us", "subtitle": "Join us on Sunday",
+            "imageSrc": "/assets/extracted/church_building.jpg", "published": True,
+            "videoSrc": "/assets/hero/worship.mp4",
+            "primaryButton": {"label": "Visit", "url": "/visit"},
+            "secondaryButton": {"label": "Life at DHOG", "url": "#home-church-life"},
+        }
+        flyer = {**slide, "id": "fixture-flyer", "title": "", "subtitle": "", "videoSrc": ""}
+        slides = [slide, flyer, {**slide, "id": "fixture-draft", "published": False}]
+        state["data"]["heroSlides"] = slides
+        slides[1] = {**flyer, "showText": True}
+        self.assertEqual(self.client.put(route, json=state).status_code, 422)
+        slides[1] = flyer
+        saved = self.client.put(route, json=state)
+        self.assertEqual(saved.status_code, 200, saved.text)
+        state = saved.json()
+        self.assertEqual(self.client.get(detail).json(), {})
+        self.assertEqual(self.client.post(submit, json={"revision": str(uuid4()), "answers": {}}).status_code, 404)
+        public = self.client.get("/api/public/site").json()
+        self.assertEqual([item["id"] for item in public["heroSlides"]], [slide["id"], flyer["id"]])
+        self.assertTrue(public["heroSlides"][0]["showText"])
+        self.assertFalse(public["heroSlides"][1]["showText"])
+        self.assertEqual(public["heroSlides"][1]["title"], "")
+        self.assertNotIn("engagement", public["gallery"][0])
+
+        engagement = state["data"]["gallery"][0]["engagement"]
+        engagement["published"] = True
+        saved = self.client.put(route, json=state)
+        self.assertEqual(saved.status_code, 200, saved.text)
+        state = saved.json()
+        published = self.client.get(detail).json()
+        revision = published["form"]["revision"]
+        self.assertEqual(published["links"][0]["url"], "/programmes")
+        self.client.cookies.clear()
+        self.assertEqual(self.client.get("/api/admin/submissions").status_code, 401)
+        response = self.client.post(submit, json={"revision": revision, "answers": {field_id: "not-an-email"}})
+        self.assertEqual(response.status_code, 422)
+        response = self.client.post(submit, json={"revision": revision, "answers": {field_id: "visitor@example.com"}})
+        self.assertEqual(response.status_code, 201, response.text)
+        self.assertEqual(set(response.json()), {"id"})
+
+        self.login()
+        inbox = self.client.get("/api/admin/submissions").json()
+        submission = next(item for item in inbox if item["id"] == response.json()["id"])
+        self.assertEqual(submission["data"]["answers"], [{"label": "Email address", "value": "visitor@example.com"}])
+        state["data"]["gallery"][0]["engagement"]["form"]["fields"][0]["label"] = "Your email"
+        saved = self.client.put(route, json=state)
+        self.assertEqual(saved.status_code, 200, saved.text)
+        stale = self.client.post(submit, json={"revision": revision, "answers": {field_id: "visitor@example.com"}})
+        self.assertEqual(stale.status_code, 409)
+
     def test_forms_persist_and_create_pending_member(self):
         member_email = f"application-{TAG}@example.com"
         responses = [

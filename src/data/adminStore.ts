@@ -1,4 +1,5 @@
 import type { ArchiveEvent } from './legacyArchive';
+import type { HeroSlide } from './heroSlides';
 import type { Ministry, Program, Sermon } from './churchData';
 import { GalleryItem } from './galleryData';
 
@@ -269,6 +270,7 @@ export const INITIAL_CHURCH_CONTACT: ChurchContactConfig = {
 };
 
 export interface AdminStoreData {
+  heroSlides?: HeroSlide[];
   services: ChurchService[];
   sermons: Sermon[];
   archiveEvents?: ArchiveEvent[];
@@ -285,7 +287,7 @@ export interface AdminStoreData {
   lastBackupDate: string;
 }
 
-export type PublicSite = Pick<AdminStoreData, 'sermons' | 'gallery' | 'churchContactConfig' | 'announcements' | 'archiveEvents' | 'recurringPrograms' | 'ministries'> & {
+export type PublicSite = Pick<AdminStoreData, 'heroSlides' | 'sermons' | 'gallery' | 'churchContactConfig' | 'announcements' | 'archiveEvents' | 'recurringPrograms' | 'ministries'> & {
   services: Pick<ChurchService, 'id' | 'title' | 'serviceType' | 'date' | 'startTime' | 'endTime' | 'location' | 'status' | 'theme' | 'scriptureAnchor'>[];
 };
 

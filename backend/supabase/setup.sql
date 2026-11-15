@@ -65,6 +65,18 @@ CREATE TABLE IF NOT EXISTS site_state (
             id INTEGER PRIMARY KEY CHECK(id = 1), version INTEGER NOT NULL, last_backup_date TEXT NOT NULL
         );
 
+CREATE TABLE IF NOT EXISTS hero_slides (
+    id VARCHAR(255) PRIMARY KEY, sort_order INTEGER NOT NULL,
+    title TEXT,
+    subtitle TEXT,
+    image_src TEXT,
+    video_src TEXT,
+    primary_button TEXT,
+    secondary_button TEXT,
+    published INTEGER,
+    extra_fields TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS services (
     id VARCHAR(255) PRIMARY KEY, sort_order INTEGER NOT NULL,
     title TEXT,
@@ -278,10 +290,17 @@ BEGIN
     IF FOUND THEN
         IF jsonb_typeof(snapshot) <> 'object' OR EXISTS (
             SELECT 1 FROM jsonb_object_keys(snapshot) AS key(name)
-            WHERE name NOT IN ('services', 'sermons', 'gallery', 'contactMessages', 'prayers', 'discipleship', 'giving', 'announcements', 'archiveEvents', 'recurringPrograms', 'ministries', 'liveStream', 'churchContactConfig', 'lastBackupDate')
+            WHERE name NOT IN ('heroSlides', 'services', 'sermons', 'gallery', 'contactMessages', 'prayers', 'discipleship', 'giving', 'announcements', 'archiveEvents', 'recurringPrograms', 'ministries', 'liveStream', 'churchContactConfig', 'lastBackupDate')
         ) THEN
             RAISE EXCEPTION 'The old site contains unrecognized data';
         END IF;
+        INSERT INTO hero_slides (sort_order, id, title, subtitle, image_src, video_src, primary_button, secondary_button, published, extra_fields)
+        SELECT ordinal - 1, record->>'id', CASE WHEN jsonb_typeof(record->'title') = 'string' THEN (record->>'title') END, CASE WHEN jsonb_typeof(record->'subtitle') = 'string' THEN (record->>'subtitle') END, CASE WHEN jsonb_typeof(record->'imageSrc') = 'string' THEN (record->>'imageSrc') END, CASE WHEN jsonb_typeof(record->'videoSrc') = 'string' THEN (record->>'videoSrc') END, CASE WHEN jsonb_typeof(record->'primaryButton') <> 'null' THEN (record->'primaryButton')::text END, CASE WHEN jsonb_typeof(record->'secondaryButton') <> 'null' THEN (record->'secondaryButton')::text END, CASE WHEN jsonb_typeof(record->'published') = 'boolean' THEN ((record->>'published')::boolean)::integer END, (record - 'id' - array_remove(ARRAY[CASE WHEN jsonb_typeof(record->'title') = 'string' THEN 'title' END, CASE WHEN jsonb_typeof(record->'subtitle') = 'string' THEN 'subtitle' END, CASE WHEN jsonb_typeof(record->'imageSrc') = 'string' THEN 'imageSrc' END, CASE WHEN jsonb_typeof(record->'videoSrc') = 'string' THEN 'videoSrc' END, CASE WHEN jsonb_typeof(record->'primaryButton') <> 'null' THEN 'primaryButton' END, CASE WHEN jsonb_typeof(record->'secondaryButton') <> 'null' THEN 'secondaryButton' END, CASE WHEN jsonb_typeof(record->'published') = 'boolean' THEN 'published' END]::text[], NULL))::text
+        FROM jsonb_array_elements(COALESCE(snapshot->'heroSlides', '[]'::jsonb)) WITH ORDINALITY AS rows(record, ordinal);
+        IF (SELECT count(*) FROM hero_slides) <> (jsonb_array_length(COALESCE(snapshot->'heroSlides', '[]'::jsonb))) THEN
+            RAISE EXCEPTION 'Row count mismatch for hero_slides';
+        END IF;
+
         INSERT INTO services (sort_order, id, title, service_type, date, start_time, end_time, location, status, theme, scripture_anchor, target_attendance, actual_attendance, roster, order_of_service, bulletin_notes, live_stream_url, extra_fields)
         SELECT ordinal - 1, record->>'id', CASE WHEN jsonb_typeof(record->'title') = 'string' THEN (record->>'title') END, CASE WHEN jsonb_typeof(record->'serviceType') = 'string' THEN (record->>'serviceType') END, CASE WHEN jsonb_typeof(record->'date') = 'string' THEN (record->>'date') END, CASE WHEN jsonb_typeof(record->'startTime') = 'string' THEN (record->>'startTime') END, CASE WHEN jsonb_typeof(record->'endTime') = 'string' THEN (record->>'endTime') END, CASE WHEN jsonb_typeof(record->'location') = 'string' THEN (record->>'location') END, CASE WHEN jsonb_typeof(record->'status') = 'string' THEN (record->>'status') END, CASE WHEN jsonb_typeof(record->'theme') = 'string' THEN (record->>'theme') END, CASE WHEN jsonb_typeof(record->'scriptureAnchor') = 'string' THEN (record->>'scriptureAnchor') END, CASE WHEN CASE WHEN jsonb_typeof(record->'targetAttendance') = 'number' AND (record->>'targetAttendance') ~ '^-?[0-9]+$' THEN (record->>'targetAttendance')::numeric BETWEEN -9223372036854775808 AND 9223372036854775807 ELSE false END THEN (record->>'targetAttendance')::bigint END, CASE WHEN CASE WHEN jsonb_typeof(record->'actualAttendance') = 'number' AND (record->>'actualAttendance') ~ '^-?[0-9]+$' THEN (record->>'actualAttendance')::numeric BETWEEN -9223372036854775808 AND 9223372036854775807 ELSE false END THEN (record->>'actualAttendance')::bigint END, CASE WHEN jsonb_typeof(record->'roster') <> 'null' THEN (record->'roster')::text END, CASE WHEN jsonb_typeof(record->'orderOfService') <> 'null' THEN (record->'orderOfService')::text END, CASE WHEN jsonb_typeof(record->'bulletinNotes') = 'string' THEN (record->>'bulletinNotes') END, CASE WHEN jsonb_typeof(record->'liveStreamUrl') = 'string' THEN (record->>'liveStreamUrl') END, (record - 'id' - array_remove(ARRAY[CASE WHEN jsonb_typeof(record->'title') = 'string' THEN 'title' END, CASE WHEN jsonb_typeof(record->'serviceType') = 'string' THEN 'serviceType' END, CASE WHEN jsonb_typeof(record->'date') = 'string' THEN 'date' END, CASE WHEN jsonb_typeof(record->'startTime') = 'string' THEN 'startTime' END, CASE WHEN jsonb_typeof(record->'endTime') = 'string' THEN 'endTime' END, CASE WHEN jsonb_typeof(record->'location') = 'string' THEN 'location' END, CASE WHEN jsonb_typeof(record->'status') = 'string' THEN 'status' END, CASE WHEN jsonb_typeof(record->'theme') = 'string' THEN 'theme' END, CASE WHEN jsonb_typeof(record->'scriptureAnchor') = 'string' THEN 'scriptureAnchor' END, CASE WHEN CASE WHEN jsonb_typeof(record->'targetAttendance') = 'number' AND (record->>'targetAttendance') ~ '^-?[0-9]+$' THEN (record->>'targetAttendance')::numeric BETWEEN -9223372036854775808 AND 9223372036854775807 ELSE false END THEN 'targetAttendance' END, CASE WHEN CASE WHEN jsonb_typeof(record->'actualAttendance') = 'number' AND (record->>'actualAttendance') ~ '^-?[0-9]+$' THEN (record->>'actualAttendance')::numeric BETWEEN -9223372036854775808 AND 9223372036854775807 ELSE false END THEN 'actualAttendance' END, CASE WHEN jsonb_typeof(record->'roster') <> 'null' THEN 'roster' END, CASE WHEN jsonb_typeof(record->'orderOfService') <> 'null' THEN 'orderOfService' END, CASE WHEN jsonb_typeof(record->'bulletinNotes') = 'string' THEN 'bulletinNotes' END, CASE WHEN jsonb_typeof(record->'liveStreamUrl') = 'string' THEN 'liveStreamUrl' END]::text[], NULL))::text
         FROM jsonb_array_elements(COALESCE(snapshot->'services', '[]'::jsonb)) WITH ORDINALITY AS rows(record, ordinal);

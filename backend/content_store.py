@@ -5,6 +5,7 @@ import re
 
 # Names are fixed here. SQL identifiers never come from API requests.
 COLLECTIONS = {
+    "heroSlides": ("hero_slides", "title subtitle imageSrc videoSrc primaryButton:json secondaryButton:json published:bool"),
     "services": ("services", "title serviceType date startTime endTime location status theme scriptureAnchor targetAttendance:int actualAttendance:int roster:json orderOfService:json bulletinNotes liveStreamUrl"),
     "sermons": ("sermons", "title preacher date scripture type videoUrl audioDuration summary content:json imageSrc audioUrl series sourceUrl"),
     "gallery": ("gallery_items", "title category categoryLabel imageSrc date description scripture featured:bool"),
