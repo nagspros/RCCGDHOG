@@ -107,44 +107,72 @@
   background: #05271f;
   color: #fff2d4;
   width: 100%;
-  height: clamp(23rem, 39vw, 32rem);
+  height: clamp(520px, 72vh, 660px);
+  overflow: hidden;
+  user-select: none;
 }
+.home-hero:focus-visible {
+  outline: 2px solid var(--home-gold);
+  outline-offset: -2px;
+}
+
+/* Individual Slide Layer */
+.home-hero-slide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Background Media & Scrim for Text Banners */
+.home-hero-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 1;
+}
+.home-hero-bg-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: right center;
+}
+.home-hero-art video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: right center;
+}
+.home-hero-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, #05271ff5 0%, #05271fe6 38%, #05271fa6 68%, #05271f30 100%),
+    linear-gradient(0deg, #05271ff0 0%, transparent 40%);
+  pointer-events: none;
+}
+/* Inner Copy Container for Text Banners */
 .home-hero-inner {
   max-width: 1400px;
   margin: 0 auto;
   position: relative;
-  z-index: 1;
+  z-index: 3;
   height: 100%;
   width: 100%;
-}
-.home-hero-art {
-  position: absolute;
-  inset: 0 0 0 43%;
-  z-index: -1;
-  overflow: hidden;
-}
-.home-hero-art :is(img, video) {
-  position: absolute;
-  top: 0;
-  right: -3.2%;
-  width: 111%;
-  max-width: none;
-  height: 113%;
-  object-fit: cover;
-  object-position: right top;
-}
-.home-hero-art::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, #05271f, #05271f80 23%, transparent 52%), linear-gradient(0deg, #05271f 0%, transparent 20%);
+  display: flex;
+  align-items: center;
 }
 .home-hero-copy {
   display: flex;
   flex-direction: column;
   justify-content: center;
   height: 100%;
-  padding: clamp(22px, 4vw, 48px) clamp(20px, 7.4vw, 88px) 64px;
+  padding: clamp(24px, 4vw, 54px) clamp(20px, 7vw, 88px) clamp(72px, 10vw, 110px);
   position: relative;
   max-width: 820px;
 }
@@ -158,77 +186,401 @@
   overflow-y: auto;
   scrollbar-width: thin;
 }
-.home-eyebrow { font-size: clamp(.57rem, 1.4vw, .95rem); font-weight: 700; letter-spacing: .11em; text-transform: uppercase; }
-.home-hero h1 { font-size: clamp(2rem, 7.1vw, 5.35rem); line-height: .96; letter-spacing: -.028em; margin-top: .2em; }
-.home-tagline {
-  max-width: 32ch;
-  margin-top: .9em;
-  color: #fff6e4;
-  font-size: clamp(.75rem, 1.76vw, 1.23rem);
-  font-weight: 500;
-  line-height: 1.5;
+.home-hero :is(h1, .home-tagline, .home-button span) { overflow-wrap: anywhere; }
+.home-hero .home-button {
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
 }
-.home-actions { display: flex; flex-wrap: wrap; gap: clamp(8px, 2vw, 20px); margin-top: clamp(12px, 2.7vw, 28px); }
-.home-hero .home-actions { flex-shrink: 0; }
-.home-hero :is(h1, .home-tagline, .home-actions span) { overflow-wrap: anywhere; }
-.home-hero .home-actions .home-button { max-width: 100%; white-space: normal; }
-.home-hero-controls {
-  position: absolute;
-  z-index: 1;
-  display: flex;
-  gap: 2px;
+.home-hero .home-button:active { filter: brightness(.9); }
+.home-eyebrow-wrapper {
+  display: inline-flex;
   align-items: center;
-  bottom: clamp(3px, 1vw, 12px);
-  inset-inline-start: clamp(20px, 7.4vw, 88px);
-  border: 1px solid #e4ca8a50;
-  border-radius: 24px;
-  background: #05271fed;
-  color: var(--home-gold);
+  gap: 8px;
+  background: rgba(230, 186, 106, 0.12);
+  border: 1px solid rgba(230, 186, 106, 0.35);
+  padding: 4px 12px;
+  border-radius: 9999px;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  margin-bottom: 0.75rem;
+  width: fit-content;
 }
-.home-hero-controls button {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  cursor: pointer;
+.home-eyebrow {
+  font-size: clamp(0.68rem, 1.2vw, 0.85rem);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #fae19c;
 }
-.home-hero-controls button:hover { background: #1a4736; }
-.home-hero-controls svg { width: 16px; height: 16px; }
-.home-hero-count { font-size: .78rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.home-wave { position: absolute; bottom: -1px; width: 100%; height: clamp(30px, 7vw, 80px); pointer-events: none; }
+.home-hero h1 {
+  font-size: clamp(2.2rem, 6.2vw, 4.8rem);
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+  color: #fff9ed;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  margin-top: 0.15em;
+}
+.home-tagline {
+  max-width: 36ch;
+  margin-top: 0.9em;
+  color: #f7eedb;
+  font-size: clamp(0.9rem, 1.8vw, 1.25rem);
+  font-weight: 400;
+  line-height: 1.55;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+}
+.home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(10px, 2vw, 20px);
+  margin-top: clamp(16px, 3vw, 32px);
+  flex-shrink: 0;
+}
+.home-hero .home-hero-flyer-actions .home-button {
+  padding: 8px 18px;
+  font-size: .88rem;
+  border-radius: 10px;
+}
 
-.home-hero--media-only {
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
-}
-.home-hero--media-only .home-hero-art { position: relative; inset: auto; }
-.home-hero--media-only .home-hero-art::after { content: none; }
-.home-hero--media-only .home-hero-art :is(img, video) {
+/* ==========================================================================
+   Full Flyer / Image-Only Canvas (Clean uncropped containment + ambient glow)
+   ========================================================================== */
+.home-hero-flyer-canvas {
+  position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* Ambient Blurred Backdrop */
+.home-hero-ambient {
+  position: absolute;
+  inset: -20px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.home-hero-ambient-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
+  filter: blur(40px) brightness(0.32) saturate(1.25);
+  transform: scale(1.18);
 }
-.home-hero--contain .home-hero-art :is(img, video):not(.home-hero-backdrop) { object-fit: contain; }
-.home-hero-art .home-hero-backdrop {
-  filter: blur(24px) brightness(.45);
-  transform: scale(1.15);
+.home-hero-ambient-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at center, rgba(5, 39, 31, 0.42) 0%, rgba(5, 39, 31, 0.88) 100%),
+    linear-gradient(0deg, rgba(5, 39, 31, 0.95) 0%, transparent 35%);
 }
-.home-hero--media-only .home-hero-copy {
-  flex-direction: row;
-  flex-wrap: wrap;
+
+/* Flyer Frame Container (keeps full flyer 100% visible inside uniform frame) */
+.home-hero-flyer-frame {
+  position: absolute;
+  inset: 12px 16px clamp(48px, 7vw, 76px) 16px;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px clamp(12px, 2vw, 24px);
-  padding: 8px 16px;
-  margin: 0 auto;
-  max-width: none;
+  gap: 12px;
+  z-index: 2;
 }
-.home-hero--media-only .home-actions { justify-content: center; margin-top: 0; }
-.home-hero--media-only .home-hero-controls { position: static; }
-.home-hero--media-only .home-wave { height: 9px; }
+.home-hero-flyer-media {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 0;
+}
+.home-hero-flyer-img {
+  max-height: 100%;
+  max-width: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 14px;
+  box-shadow:
+    0 24px 65px rgba(0, 0, 0, 0.65),
+    0 4px 16px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.12);
+  pointer-events: auto;
+  user-select: none;
+}
+.home-hero-flyer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   Navigation Controls Redesign (Arrows & Bottom Hub)
+   ========================================================================== */
+.home-hero-navigation {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  pointer-events: none;
+}
+.home-hero-navigation button { pointer-events: auto; }
+
+/* Floating Side Arrows */
+.home-hero-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 25;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(5, 39, 31, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(230, 186, 106, 0.35);
+  color: #fae19c;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition: background-color .18s, border-color .18s, color .18s, transform .18s, box-shadow .18s;
+}
+.home-hero-arrow:hover {
+  background: #05271f;
+  border-color: #fae19c;
+  color: #fff;
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 12px 32px rgba(230, 186, 106, 0.25);
+}
+.home-hero-arrow:active {
+  transform: translateY(-50%) scale(0.95);
+}
+.home-hero-arrow--prev {
+  left: clamp(12px, 2.8vw, 36px);
+}
+.home-hero-arrow--next {
+  right: clamp(12px, 2.8vw, 36px);
+}
+
+/* Bottom Control Hub (Positioned bottom-right on desktop so it NEVER covers buttons) */
+.home-hero-hub {
+  position: absolute;
+  bottom: clamp(22px, 4.2vw, 38px);
+  right: clamp(20px, 5vw, 88px);
+  left: auto;
+  transform: none;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(5, 39, 31, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(230, 186, 106, 0.35);
+  border-radius: 9999px;
+  padding: 6px 16px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+}
+
+/* Slide Indicator Pills */
+.home-hero-pills {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  pointer-events: auto;
+}
+.home-hero-pill {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.32);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.home-hero-pill:hover {
+  background: rgba(255, 255, 255, 0.75);
+  transform: scale(1.2);
+}
+.home-hero-pill--active {
+  width: 28px;
+  background: linear-gradient(90deg, #dfad57, #fae19c);
+  box-shadow: 0 0 12px rgba(250, 225, 156, 0.6);
+}
+
+/* Slide Counter */
+.home-hero-counter {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #fae19c;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+  padding-left: 4px;
+  white-space: nowrap;
+}
+
+/* Play and pause */
+.home-hero-play-btn {
+  min-inline-size: 5.75rem;
+  min-block-size: 44px;
+  padding: 6px 12px;
+  background: #f3d48a;
+  color: #19241a;
+  font-size: .82rem;
+  font-weight: 700;
+  line-height: 1;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: background-color .18s;
+}
+.home-hero-play-btn:hover { background: #ffe4a4; }
+.home-hero-play-btn:active { background: #dcb566; }
+.home-shell .home-hero-play-btn:focus-visible { outline-color: var(--home-gold); outline-offset: 2px; }
+
+/* Bottom Golden Wave SVG */
+.home-wave {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: clamp(34px, 5.5vw, 68px);
+  pointer-events: none;
+  z-index: 10;
+}
+
+@media (min-width: 769px) {
+  .home-hero-flyer-canvas--cover .home-hero-ambient { display: none; }
+  .home-hero-flyer-canvas--cover .home-hero-flyer-frame,
+  .home-hero-flyer-canvas--cover .home-hero-flyer-media { position: absolute; inset: 0; }
+  .home-hero-flyer-canvas--cover .home-hero-flyer-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: right center;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .home-hero-flyer-canvas--cover .home-hero-flyer-media::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(0deg, #05271feb, #05271f4d 50%, #05271f80);
+    pointer-events: none;
+  }
+  .home-hero-flyer-canvas--cover .home-hero-flyer-actions {
+    position: absolute;
+    bottom: clamp(24px, 4.5vw, 42px);
+    left: clamp(24px, 6vw, 88px);
+  }
+  .home-hero-hub { max-width: min(40%, 28rem); }
+}
+
+@media (max-width: 768px) {
+  .home-hero {
+    --hero-bottom-space: 20px;
+    height: clamp(22rem, 100vw, 32rem);
+    touch-action: pan-y pinch-zoom;
+  }
+  .home-hero--has-controls { --hero-bottom-space: 76px; }
+  .home-hero-copy {
+    width: 100%;
+    padding: clamp(16px, 4vw, 30px) clamp(16px, 6vw, 36px) var(--hero-bottom-space);
+  }
+  .home-hero h1 { font-size: clamp(2rem, 8.5vw, 3.5rem); }
+  .home-tagline { line-height: 1.45; }
+  .home-hero :is(.home-actions, .home-hero-flyer-actions) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    width: min(100%, 23rem);
+    gap: 8px;
+  }
+  .home-hero .home-hero-flyer-actions { width: min(calc(100% - 24px), 23rem); }
+  .home-hero :is(.home-actions, .home-hero-flyer-actions) .home-button {
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    padding-inline: 10px;
+    font-size: .85rem;
+    line-height: 1.25;
+  }
+  .home-hero :is(.home-actions, .home-hero-flyer-actions) > :only-child {
+    grid-column: 1 / -1;
+    width: min(100%, 14rem);
+  }
+  .home-hero-flyer-actions > :only-child { justify-self: center; }
+  .home-hero-art :is(.home-hero-bg-img, video) { object-position: center; }
+  .home-hero-scrim {
+    background: linear-gradient(180deg, #05271f75, #05271fa8 48%, #05271f 100%);
+  }
+  .home-hero-flyer-frame {
+    inset: 0 0 var(--hero-bottom-space);
+    gap: 8px;
+  }
+  .home-hero-flyer-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .home-hero-navigation {
+    inset: auto 0 12px;
+    width: max-content;
+    max-width: calc(100% - 24px);
+    margin-inline: auto;
+    display: flex;
+    align-items: center;
+    padding: 3px;
+    border: 1px solid #e6ba6a59;
+    border-radius: 9999px;
+    background: #05271fee;
+    box-shadow: 0 8px 22px #02120d80;
+    pointer-events: auto;
+  }
+  .home-hero-arrow,
+  .home-hero-arrow:hover,
+  .home-hero-arrow:active {
+    position: static;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    transform: none;
+    border: none;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+  .home-hero-hub {
+    position: static;
+    padding: 0 4px;
+    gap: 4px;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+  .home-hero-pills { display: none; }
+  .home-hero-counter { padding-inline: 5px; }
+  .home-wave { height: 24px; }
+}
 
 .home-quick-info-bar {
   background: var(--home-green);
@@ -416,8 +768,6 @@
 }
 
 @media (max-width: 450px) {
-  .home-hero-art { left: 26%; }
-  .home-hero-art::after { background: linear-gradient(90deg, #05271f 1%, #05271fc9 24%, #05271f30 76%), linear-gradient(0deg, #05271f, transparent 42%); }
   .home-feature { grid-template-columns: 1fr; gap: 12px; }
   .home-feature img { aspect-ratio: 2 / 1; max-height: 175px; }
   .home-sermons { padding: 14px var(--home-edge); }

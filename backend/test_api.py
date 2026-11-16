@@ -88,7 +88,7 @@ class ChurchApiTest(unittest.TestCase):
     def test_account_credentials_require_password_and_revoke_sessions(self):
         original_email = f"settings-{TAG}@example.com"
         new_email = f"updated-{TAG}@example.com"
-        new_password = "updated-test-password-long"
+        new_password = "test-123"
         salt = bytes(16)
         with db(write=True) as connection:
             connection.execute("INSERT INTO admin VALUES (?, ?, ?)",
@@ -103,7 +103,7 @@ class ChurchApiTest(unittest.TestCase):
                 self.assertEqual(login.status_code, 200)
             self.assertEqual(self.client.post(route, json={**update, "currentPassword": "wrong"}).status_code, 403)
             self.assertEqual(self.client.post(route, json={**update, "email": self.admin_email}).status_code, 409)
-            self.assertEqual(self.client.post(route, json={**update, "newPassword": "short"}).status_code, 422)
+            self.assertEqual(self.client.post(route, json={**update, "newPassword": new_password[:-1]}).status_code, 422)
             response = self.client.post(route, json=update)
             self.assertEqual(response.status_code, 200, response.text)
             self.assertEqual(response.json(), {"email": new_email})

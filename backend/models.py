@@ -141,7 +141,7 @@ class HeroSlide(Form):
     imageSrc: SiteURL
     videoSrc: Annotated[str, StringConstraints(strip_whitespace=True, max_length=2048)] = ""
     showText: bool = Field(default_factory=lambda fields: bool(fields["videoSrc"]))
-    imageFit: Literal["contain", "cover"] = "contain"
+    imageFit: Literal["contain", "cover"] = "cover"
     primaryButton: SiteLink
     secondaryButton: SiteLink
     published: bool

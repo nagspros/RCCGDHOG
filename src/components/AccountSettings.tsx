@@ -5,6 +5,7 @@ import { ApiError } from '../data/api';
 import { FormError, useServerForm } from './ServerForm';
 
 const inputClass = 'mt-1 block w-full rounded-xl border border-stone-300 bg-white px-3 py-2.5 text-sm focus-visible:outline-2 focus-visible:outline-[#38684b]';
+const minPasswordLength = 8;
 
 export function AccountSettings({ email, saving, returnToSignIn }: {
   email: string;
@@ -55,8 +56,8 @@ export function AccountSettings({ email, saving, returnToSignIn }: {
           </label>
           <div>
             <label className="block text-sm font-medium" htmlFor="account-new-password">New password</label>
-            <input id="account-new-password" className={inputClass} name="newPassword" type="password" autoComplete="new-password" minLength={12} maxLength={512} aria-describedby="new-password-help" />
-            <span id="new-password-help" className="mt-1.5 block text-xs text-stone-600">Use at least 12 characters, or leave blank to keep your password.</span>
+            <input id="account-new-password" className={inputClass} name="newPassword" type="password" autoComplete="new-password" minLength={minPasswordLength} maxLength={512} aria-describedby="new-password-help" />
+            <span id="new-password-help" className="mt-1.5 block text-xs text-stone-600">Use at least {minPasswordLength} characters, or leave blank to keep your password.</span>
           </div>
           <label className="block text-sm font-medium">
             Confirm new password

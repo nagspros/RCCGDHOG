@@ -14,17 +14,19 @@ from .db import db, initialize, within_limit
 COOKIE = "dhog_staff"
 DEFAULT_STAFF_EMAIL = "admin@rccgdhog.org"
 SESSION_SECONDS = 8 * 60 * 60
+MIN_PASSWORD_LENGTH = 8
+MAX_PASSWORD_LENGTH = 512
 
 
 class Login(BaseModel):
     email: EmailStr
-    password: str = Field(min_length=1, max_length=512)
+    password: str = Field(min_length=1, max_length=MAX_PASSWORD_LENGTH)
 
 
 class CredentialChange(BaseModel):
     email: EmailStr
-    currentPassword: str = Field(min_length=1, max_length=512)
-    newPassword: str | None = Field(default=None, min_length=12, max_length=512)
+    currentPassword: str = Field(min_length=1, max_length=MAX_PASSWORD_LENGTH)
+    newPassword: str | None = Field(default=None, min_length=MIN_PASSWORD_LENGTH, max_length=MAX_PASSWORD_LENGTH)
 
 
 def password_digest(password, salt):
@@ -123,9 +125,9 @@ def main():
     parser.add_argument("email", nargs="?", default=DEFAULT_STAFF_EMAIL)
     parser.add_argument("--role", choices=["admin", "pastor"], default="admin")
     args = parser.parse_args()
-    password = getpass.getpass("Password (at least 12 characters): ")
-    if not 12 <= len(password) <= 512 or password != getpass.getpass("Confirm password: "):
-        parser.error("Passwords must match and contain 12–512 characters.")
+    password = getpass.getpass(f"Password (at least {MIN_PASSWORD_LENGTH} characters): ")
+    if not MIN_PASSWORD_LENGTH <= len(password) <= MAX_PASSWORD_LENGTH or password != getpass.getpass("Confirm password: "):
+        parser.error(f"Passwords must match and contain {MIN_PASSWORD_LENGTH}–{MAX_PASSWORD_LENGTH} characters.")
     email = Login(email=args.email, password=password).email.lower()
     initialize()
     with db(write=True) as connection:
